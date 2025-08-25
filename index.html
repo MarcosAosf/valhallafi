@@ -1,93 +1,74 @@
-<!doctype html>
-<html lang="pt-br">
+<!DOCTYPE html>
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Minhas Finanças — Controle de Gastos</title>
-  <meta name="description" content="App simples de controle financeiro com login (Firebase), Firestore e gráficos. Hospede no GitHub Pages." />
-
-  <!-- Tailwind (CDN) -->
+  <meta charset="UTF-8">
+  <title>Controle de Gastos</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          boxShadow: {
-            soft: '0 10px 25px -10px rgba(0,0,0,0.15)'
-          }
-        }
-      }
-    }
-  </script>
-
-  <!-- Chart.js (gráficos) -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <style>
-    html, body { background: #0b1020; }
-  </style>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="min-h-screen text-slate-100">
-  <header class="sticky top-0 z-10 bg-slate-900/80 backdrop-blur border-b border-slate-800">
-    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-      <h1 class="text-xl sm:text-2xl font-semibold tracking-tight">💸 Minhas Finanças</h1>
-      <div class="flex items-center gap-3">
-        <span id="userEmail" class="text-slate-300 text-sm hidden"></span>
-        <button id="btnLogout" class="hidden px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700">Sair</button>
-      </div>
-    </div>
-  </header>
+<body class="bg-gray-950 text-white p-6">
 
-  <!-- Auth -->
-  <main id="authSection" class="max-w-md mx-auto p-6 mt-10">
-    <div class="bg-slate-900/70 border border-slate-800 rounded-2xl p-6 shadow-soft">
-      <h2 class="text-2xl font-semibold mb-5">Entrar</h2>
-      <form id="loginForm" class="space-y-3">
-        <input id="loginEmail" type="email" required placeholder="Email" class="w-full px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-indigo-500" />
-        <input id="loginPassword" type="password" required placeholder="Senha" class="w-full px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-indigo-500" />
-        <button class="w-full py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">Entrar</button>
-      </form>
+  <h1 class="text-2xl font-bold mb-6">💰 Controle de Gastos</h1>
 
-      <div class="my-6 h-px bg-slate-800"></div>
+  <!-- Salário Fixo -->
+  <div class="bg-gray-900 p-4 rounded-2xl shadow-md mb-4">
+    <h2 class="text-lg font-semibold mb-2">Salário Fixo</h2>
+    <input id="salario" type="number" placeholder="Digite seu salário"
+           class="w-full p-2 mb-2 rounded bg-gray-800 text-white">
+    <button onclick="salvarSalario()"
+            class="bg-green-600 w-full py-2 rounded-xl hover:bg-green-700">
+      Salvar Salário
+    </button>
+  </div>
 
-      <h3 class="text-lg font-medium">Criar conta</h3>
-      <form id="registerForm" class="space-y-3 mt-2">
-        <input id="regEmail" type="email" required placeholder="Email" class="w-full px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-indigo-500" />
-        <input id="regPassword" type="password" minlength="6" required placeholder="Senha (mín. 6)" class="w-full px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 outline-none focus:border-indigo-500" />
-        <button class="w-full py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500">Criar</button>
-      </form>
-      <p id="authMsg" class="text-sm text-rose-400 mt-4"></p>
-    </div>
-  </main>
+  <!-- Adicionar Gasto -->
+  <div class="bg-gray-900 p-4 rounded-2xl shadow-md mb-4">
+    <h2 class="text-lg font-semibold mb-2">Adicionar Gasto</h2>
+    <input id="descricao" placeholder="Descrição"
+           class="w-full p-2 mb-2 rounded bg-gray-800 text-white">
+    <input id="valor" type="number" placeholder="Valor"
+           class="w-full p-2 mb-2 rounded bg-gray-800 text-white">
+    <input id="parcelas" type="number" placeholder="Parcelas (1 se à vista)"
+           class="w-full p-2 mb-2 rounded bg-gray-800 text-white">
+    <select id="mes" class="w-full p-2 mb-2 rounded bg-gray-800 text-white">
+      <option>Janeiro</option><option>Fevereiro</option><option>Março</option>
+      <option>Abril</option><option>Maio</option><option>Junho</option>
+      <option>Julho</option><option>Agosto</option><option>Setembro</option>
+      <option>Outubro</option><option>Novembro</option><option>Dezembro</option>
+    </select>
+    <button onclick="salvarGasto()"
+            class="bg-indigo-600 w-full py-2 rounded-xl hover:bg-indigo-700">
+      Salvar Gasto
+    </button>
+  </div>
 
-  <!-- App -->
-  <main id="appSection" class="hidden max-w-6xl mx-auto px-4 pb-20">
-    <div class="grid gap-6 md:grid-cols-3 mt-8">
-      <div class="md:col-span-2 bg-slate-900/70 p-6 rounded-2xl border border-slate-800 shadow-soft">
-        <h2 class="text-xl font-semibold mb-4">Adicionar Gasto</h2>
-        <form id="expenseForm" class="grid gap-3 sm:grid-cols-3">
-          <input id="desc" type="text" required placeholder="Descrição" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700" />
-          <input id="amount" type="number" required placeholder="Valor" class="px-3 py-2 rounded-xl bg-slate-800 border border-slate-700" />
-          <button class="px-3 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500">Salvar</button>
-        </form>
-      </div>
-      <div class="bg-slate-900/70 p-6 rounded-2xl border border-slate-800 shadow-soft">
-        <h2 class="text-xl font-semibold mb-4">Saldo</h2>
-        <p id="balance" class="text-3xl font-bold">R$ 0,00</p>
-      </div>
-    </div>
+  <!-- Histórico -->
+  <div class="bg-gray-900 p-4 rounded-2xl shadow-md mb-4">
+    <h2 class="text-lg font-semibold mb-2">Histórico</h2>
+    <ul id="historico" class="space-y-2"></ul>
+  </div>
 
-    <div class="bg-slate-900/70 mt-8 p-6 rounded-2xl border border-slate-800 shadow-soft">
-      <h2 class="text-xl font-semibold mb-4">Histórico</h2>
-      <ul id="history" class="space-y-2"></ul>
-    </div>
+  <!-- Saldo -->
+  <div class="bg-gray-900 p-4 rounded-2xl shadow-md mb-4">
+    <h2 class="text-lg font-semibold mb-2">Saldo Atual</h2>
+    <p id="saldo" class="text-2xl font-bold text-green-400">R$ 0,00</p>
+  </div>
 
-    <div class="bg-slate-900/70 mt-8 p-6 rounded-2xl border border-slate-800 shadow-soft">
-      <h2 class="text-xl font-semibold mb-4">Gráfico</h2>
-      <canvas id="chart"></canvas>
-    </div>
-  </main>
+  <!-- Gráficos -->
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <canvas id="graficoCategorias"></canvas>
+    <canvas id="graficoMensal"></canvas>
+  </div>
 
   <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getFirestore, collection, addDoc, doc, setDoc, getDoc, deleteDoc, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+    // 🔥 Configuração Firebase (coloque a sua aqui)
     const firebaseConfig = {
       apiKey: "AIzaSyCOHtSTxM3uDD_vVurML1gJ1zMZz9YtP9o",
       authDomain: "planilha-gastos-a8665.firebaseapp.com",
@@ -98,120 +79,132 @@
       measurementId: "G-09TE1G2RMQ"
     };
 
-    const [{ initializeApp },
-           { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut },
-           { getFirestore, collection, addDoc, query, where, orderBy, getDocs, deleteDoc }]
-      = await Promise.all([
-        import('https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js'),
-        import('https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js'),
-        import('https://www.gstatic.com/firebasejs/11.0.1/firebase-firestore.js')
-      ]);
-
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    const authSection = document.getElementById('authSection');
-    const appSection = document.getElementById('appSection');
-    const loginForm = document.getElementById('loginForm');
-    const registerForm = document.getElementById('registerForm');
-    const authMsg = document.getElementById('authMsg');
-    const btnLogout = document.getElementById('btnLogout');
-    const userEmail = document.getElementById('userEmail');
+    let salarioFixo = 0;
+    let chart1, chart2;
 
-    const expenseForm = document.getElementById('expenseForm');
-    const history = document.getElementById('history');
-    const balanceEl = document.getElementById('balance');
-
-    const chartCtx = document.getElementById('chart').getContext('2d');
-    let chart;
-
-    onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        authSection.classList.add('hidden');
-        appSection.classList.remove('hidden');
-        userEmail.textContent = user.email;
-        userEmail.classList.remove('hidden');
-        btnLogout.classList.remove('hidden');
-        loadExpenses(user);
-      } else {
-        authSection.classList.remove('hidden');
-        appSection.classList.add('hidden');
-        btnLogout.classList.add('hidden');
-        userEmail.classList.add('hidden');
-        history.innerHTML = '';
-        balanceEl.textContent = 'R$ 0,00';
-      }
-    });
-
-    loginForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const email = loginForm.loginEmail.value;
-      const pass = loginForm.loginPassword.value;
-      try {
-        await signInWithEmailAndPassword(auth, email, pass);
-      } catch (err) {
-        authMsg.textContent = err.message;
-      }
-    };
-
-    registerForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const email = registerForm.regEmail.value;
-      const pass = registerForm.regPassword.value;
-      try {
-        await createUserWithEmailAndPassword(auth, email, pass);
-      } catch (err) {
-        authMsg.textContent = err.message;
-      }
-    };
-
-    btnLogout.onclick = async () => signOut(auth);
-
-    expenseForm.onsubmit = async (e) => {
-      e.preventDefault();
-      const desc = expenseForm.desc.value;
-      const amount = parseFloat(expenseForm.amount.value);
+    // 👉 Salvar salário
+    async function salvarSalario() {
+      const valor = parseFloat(document.getElementById("salario").value);
+      if (isNaN(valor) || valor <= 0) return alert("Digite um salário válido");
       const user = auth.currentUser;
-      if (!user) return;
-      await addDoc(collection(db, 'expenses'), {
-        uid: user.uid,
-        desc,
-        amount,
-        created: new Date()
-      });
-      expenseForm.reset();
-      loadExpenses(user);
-    };
+      await setDoc(doc(db, "usuarios", user.uid, "config", "salario"), { valor });
+      salarioFixo = valor;
+      alert("Salário salvo!");
+    }
 
-    async function loadExpenses(user) {
-      const q = query(collection(db, 'expenses'), where('uid', '==', user.uid), orderBy('created', 'desc'));
-      const snap = await getDocs(q);
-      history.innerHTML = '';
-      let total = 0;
-      const labels = [];
-      const values = [];
-      snap.forEach(docu => {
-        const d = docu.data();
-        total += d.amount;
-        const li = document.createElement('li');
-        li.className = 'flex justify-between bg-slate-800 px-3 py-2 rounded-xl';
-        li.innerHTML = `<span>${d.desc}</span><span>R$ ${d.amount.toFixed(2)}</span>`;
-        history.appendChild(li);
-        labels.push(d.desc);
-        values.push(d.amount);
-      });
-      balanceEl.textContent = `R$ ${total.toFixed(2)}`;
+    // 👉 Carregar salário salvo
+    async function carregarSalario() {
+      const user = auth.currentUser;
+      const docSnap = await getDoc(doc(db, "usuarios", user.uid, "config", "salario"));
+      if (docSnap.exists()) salarioFixo = docSnap.data().valor;
+    }
 
-      if (chart) chart.destroy();
-      chart = new Chart(chartCtx, {
-        type: 'doughnut',
+    // 👉 Salvar gasto
+    async function salvarGasto() {
+      const descricao = document.getElementById("descricao").value;
+      const valor = parseFloat(document.getElementById("valor").value);
+      const parcelas = parseInt(document.getElementById("parcelas").value) || 1;
+      const mes = document.getElementById("mes").value;
+      if (!descricao || isNaN(valor) || valor <= 0) return alert("Preencha os campos corretamente");
+
+      const user = auth.currentUser;
+      const valorParcela = valor / parcelas;
+
+      for (let i = 0; i < parcelas; i++) {
+        await addDoc(collection(db, "usuarios", user.uid, "gastos"), {
+          descricao,
+          valor: valorParcela,
+          mes,
+          parcela: `${i+1}/${parcelas}`,
+          data: new Date().toISOString()
+        });
+      }
+      document.getElementById("descricao").value = "";
+      document.getElementById("valor").value = "";
+      document.getElementById("parcelas").value = "";
+    }
+
+    // 👉 Remover gasto
+    async function removerGasto(id) {
+      const user = auth.currentUser;
+      await deleteDoc(doc(db, "usuarios", user.uid, "gastos", id));
+    }
+
+    // 👉 Listar gastos e atualizar gráficos
+    function listarGastos() {
+      const user = auth.currentUser;
+      const q = query(collection(db, "usuarios", user.uid, "gastos"), orderBy("data", "desc"));
+      
+      onSnapshot(q, (snapshot) => {
+        const historico = document.getElementById("historico");
+        historico.innerHTML = "";
+        let totalGastos = 0;
+        let porMes = {};
+
+        snapshot.forEach(docSnap => {
+          const g = docSnap.data();
+          totalGastos += g.valor;
+          porMes[g.mes] = (porMes[g.mes] || 0) + g.valor;
+
+          const li = document.createElement("li");
+          li.className = "flex justify-between bg-gray-800 p-2 rounded";
+          li.innerHTML = `
+            <span>${g.descricao} - R$${g.valor.toFixed(2)} (${g.parcela}) - ${g.mes}</span>
+            <button onclick="removerGasto('${docSnap.id}')" class="text-red-500 hover:text-red-700">🗑️</button>
+          `;
+          historico.appendChild(li);
+        });
+
+        // Atualizar saldo
+        document.getElementById("saldo").innerText =
+          `R$ ${(salarioFixo - totalGastos).toFixed(2)}`;
+
+        // Atualizar gráficos
+        atualizarGraficos(porMes, totalGastos);
+      });
+    }
+
+    // 👉 Gráficos
+    function atualizarGraficos(porMes, total) {
+      if (chart1) chart1.destroy();
+      if (chart2) chart2.destroy();
+
+      chart1 = new Chart(document.getElementById("graficoCategorias"), {
+        type: "bar",
         data: {
-          labels,
-          datasets: [{ data: values, backgroundColor: ["#6366f1", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"] }]
+          labels: Object.keys(porMes),
+          datasets: [{ label: "Gastos", data: Object.values(porMes), backgroundColor: "#6366f1" }]
+        }
+      });
+
+      chart2 = new Chart(document.getElementById("graficoMensal"), {
+        type: "doughnut",
+        data: {
+          labels: ["Gastos", "Sobra"],
+          datasets: [{
+            data: [total, Math.max(0, salarioFixo - total)],
+            backgroundColor: ["#ef4444", "#22c55e"]
+          }]
         }
       });
     }
+
+    // 👉 Login anônimo e inicialização
+    signInAnonymously(auth).catch(console.error);
+    onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        await carregarSalario();
+        listarGastos();
+      }
+    });
+
+    window.salvarSalario = salvarSalario;
+    window.salvarGasto = salvarGasto;
+    window.removerGasto = removerGasto;
   </script>
 </body>
 </html>
